@@ -1,6 +1,12 @@
 package com.georgian.customerorder.demo.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,11 +27,12 @@ public class Orders {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
-    private String productName;
-    private Long productPrice;
-    private Long productQuantity;
+    private LocalDateTime orderDate;
     private Long customerId;
+    private Long totalPrice;
     private Long discount;
+    private List<OrderProductMapper> orderProductMapperList = new ArrayList<OrderProductMapper>();
+
 
 
 
