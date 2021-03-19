@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
 
   @Autowired
-  private CustomerService customerService;
   private ProductService productService;
 
   public ProductController(ProductService productService) {

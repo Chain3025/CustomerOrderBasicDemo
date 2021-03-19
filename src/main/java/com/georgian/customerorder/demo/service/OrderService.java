@@ -65,7 +65,7 @@ public class OrderService {
     }
 
     private void updateDiscountAndTotalPrice(Customer customer, Orders order) {
-        Long totalPrice = null;
+        Long totalPrice = 0l;
         if(customer.getCustomerType().equals(CustomerType.REGULAR)){
              order.setDiscount(0l);
             for(OrderProductMapper orderProductMapper:order.getOrderProductMapperList()){
@@ -120,10 +120,7 @@ public class OrderService {
         Optional<Orders> byId = orderRepository.findById(id);
         if(!byId.isPresent())
             return new ResponseEntity<Orders>(byId.get(),HttpStatus.NOT_FOUND);
-        List<OrderProductMapper> orderProductMapperList = byId.get().getOrderProductMapperList();
-        for(OrderProductMapper orderProductMapper:orderProductMapperList){
-            orderProductMapperRespository.deleteById(orderProductMapper.getOrderId());
-        }
+
         orderRepository.delete(byId.get());
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

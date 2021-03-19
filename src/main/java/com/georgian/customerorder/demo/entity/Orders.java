@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import lombok.AllArgsConstructor;
@@ -31,7 +33,8 @@ public class Orders {
     private Long customerId;
     private Long totalPrice;
     private Long discount;
-    private List<OrderProductMapper> orderProductMapperList = new ArrayList<OrderProductMapper>();
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "orders", cascade = CascadeType.ALL)
+    private List<OrderProductMapper> orderProductMapperList;
 
 
 

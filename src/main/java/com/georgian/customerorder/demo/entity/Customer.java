@@ -19,7 +19,7 @@ public class Customer
     private Long customerId;
     private String customerName;
     private String customerEmail;
-    @Column(columnDefinition = "varchar(255) default 'Regular'")
+    //@Column(columnDefinition = "varchar(255) default 'Regular'")
     private CustomerType customerType;
 
 
