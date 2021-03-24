@@ -9,6 +9,7 @@ import com.georgian.customerorder.demo.repository.CustomerRepository;
 import com.georgian.customerorder.demo.repository.OrderProductMapperRespository;
 import com.georgian.customerorder.demo.repository.OrderRepository;
 import com.georgian.customerorder.demo.repository.ProductRepository;
+import java.util.ArrayList;
 import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -158,30 +159,49 @@ public class OrderService {
             customer.setCustomerType(CustomerType.PLATINUM);
         }
         customerRepository.save(customer);
-        updateDiscountAndTotalPrice(customer,reqOrder);
 
-//        if(reqOrder.getDiscount()!=null)
-//            orders.setDiscount(reqOrder.getDiscount());
-//        if(reqOrder.getTotalPrice()!=null)
-//            orders.setTotalPrice(reqOrder.getTotalPrice());
+
+        Long totalPrice = 0l;
+        if(customer.getCustomerType().equals(CustomerType.REGULAR)){
+            orders.setDiscount(0l);
+            for(OrderProductMapper orderProductMapper:reqOrder.getOrderProductMapperList()){
+                totalPrice += orderProductMapper.getProductQuantity()*orderProductMapper.getProductPrice();
+            }
+            orders.setTotalPrice(totalPrice);
+        }
+        if(customer.getCustomerType().equals(CustomerType.GOLD)){
+
+            for(OrderProductMapper orderProductMapper:reqOrder.getOrderProductMapperList()){
+                totalPrice += orderProductMapper.getProductQuantity()*orderProductMapper.getProductPrice();
+            }
+            orders.setTotalPrice(totalPrice);
+            //Long totalValue = order.getProductPrice()*order.getProductQuantity();
+            Long discount = (totalPrice*10)/100;
+            orders.setDiscount(discount);
+        }
+        if(customer.getCustomerType().equals(CustomerType.PLATINUM)){
+
+            for(OrderProductMapper orderProductMapper:reqOrder.getOrderProductMapperList()){
+                totalPrice += orderProductMapper.getProductQuantity()*orderProductMapper.getProductPrice();
+            }
+            orders.setTotalPrice(totalPrice);
+            Long discount = (totalPrice*20)/100;
+            orders.setDiscount(discount);
+        }
+
 
         List<OrderProductMapper> reqOrderProductMapperList = reqOrder.getOrderProductMapperList();
         if(!reqOrderProductMapperList.isEmpty()) {
 
-            List<OrderProductMapper> orderProductMapperList = reqOrder.getOrderProductMapperList();
-
             for(OrderProductMapper reqOrderProductMapper : reqOrderProductMapperList){
                 reqOrderProductMapper.setOrders(reqOrder);
-                //orderProductMapperRespository.save(reqOrderProductMapper);
 
             }
-
-            //orderProductMapperService.deleteOrderProductMapperByOrderIdAndNotInOrderProductId()
             orders.setOrderProductMapperList(reqOrderProductMapperList);
         }
 
         orderRepository.save(orders);
-        return new ResponseEntity<Orders>(HttpStatus.ACCEPTED);
+        return new ResponseEntity<Orders>(HttpStatus.OK);
     }
 
     public ResponseEntity<Orders> getOrderById(Long orderId) {
