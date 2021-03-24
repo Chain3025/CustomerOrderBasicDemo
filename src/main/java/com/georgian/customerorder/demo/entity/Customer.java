@@ -20,6 +20,7 @@ public class Customer
     private String customerName;
     private String customerEmail;
     //@Column(columnDefinition = "varchar(255) default 'Regular'")
+    @Enumerated(value = EnumType.ORDINAL)
     private CustomerType customerType;
 
 

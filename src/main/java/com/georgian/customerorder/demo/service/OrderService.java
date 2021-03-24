@@ -42,11 +42,24 @@ public class OrderService {
     public ResponseEntity<Orders> placeOrder(Orders order) {
         //counts is for check on total no of orders per customers
         //if its <=9 then we have change the customertype and add discount of 10
-        Long counts = orderRepository.countByCustomerId(order.getCustomerId());
+        Long customerId = order.getCustomerId();
+        Long counts = orderRepository.countByCustomerId(customerId);
         //Gets customer through the customerId in order table
-        Optional<Customer> byId = customerRepository.findById(order.getCustomerId());
-        Customer customer =byId.get();
+        Optional<Customer> byId = customerRepository.findById(customerId);
+        //customer id check as if customer doesn't exist in  customer table
+        if(!byId.isPresent()){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        Customer customer = byId.get();
         //sets its type if condition is meet
+        if(counts==9){
+            System.out.println("you have placed 9 orders with us"
+                + " buy one more stuff with us and get a discount of 10% and get prometed to gold customer");
+        }
+        if(counts==19){
+            System.out.println("you have placed 19 orders with us"
+                + " buy one more stuff with us and get a discount of 20% and get prometed to platinum customer");
+        }
         if(counts >= 9) {
             customer.setCustomerType(CustomerType.GOLD);
         }
@@ -57,8 +70,10 @@ public class OrderService {
         updateDiscountAndTotalPrice(customer,order);
         List<OrderProductMapper> addOrderProductMapperList = order.getOrderProductMapperList();
         for(OrderProductMapper orderProductMapper: addOrderProductMapperList){
-            orderProductMapperRespository.save(orderProductMapper);
+            orderProductMapper.setOrders(order);
+//            orderProductMapperRespository.save(orderProductMapper);
         }
+
         Orders save = orderRepository.save(order);
         return new ResponseEntity<Orders>(save, HttpStatus.CREATED);
 
@@ -69,22 +84,14 @@ public class OrderService {
         if(customer.getCustomerType().equals(CustomerType.REGULAR)){
              order.setDiscount(0l);
             for(OrderProductMapper orderProductMapper:order.getOrderProductMapperList()){
-                Long productId = orderProductMapper.getProductId();
-                Optional<Product> byId = productRepository.findById(productId);
-                Long productPrice = byId.get().getProductPrice();
-                totalPrice += orderProductMapper.getProductQuantity()*productPrice;
-
+                totalPrice += orderProductMapper.getProductQuantity()*orderProductMapper.getProductPrice();
             }
             order.setTotalPrice(totalPrice);
         }
         if(customer.getCustomerType().equals(CustomerType.GOLD)){
 
             for(OrderProductMapper orderProductMapper:order.getOrderProductMapperList()){
-                Long productId = orderProductMapper.getProductId();
-                Optional<Product> byId = productRepository.findById(productId);
-                Long productPrice = byId.get().getProductPrice();
-                totalPrice += orderProductMapper.getProductQuantity()*productPrice;
-
+                totalPrice += orderProductMapper.getProductQuantity()*orderProductMapper.getProductPrice();
             }
             order.setTotalPrice(totalPrice);
             //Long totalValue = order.getProductPrice()*order.getProductQuantity();
@@ -94,11 +101,7 @@ public class OrderService {
         if(customer.getCustomerType().equals(CustomerType.PLATINUM)){
 
             for(OrderProductMapper orderProductMapper:order.getOrderProductMapperList()){
-                Long productId = orderProductMapper.getProductId();
-                Optional<Product> byId = productRepository.findById(productId);
-                Long productPrice = byId.get().getProductPrice();
-                totalPrice += orderProductMapper.getProductQuantity()*productPrice;
-
+                totalPrice += orderProductMapper.getProductQuantity()*orderProductMapper.getProductPrice();
             }
             order.setTotalPrice(totalPrice);
             //Long totalValue = order.getProductPrice()*order.getProductQuantity();
@@ -119,7 +122,7 @@ public class OrderService {
     public ResponseEntity<Orders> deleteOrderById(Long id) {
         Optional<Orders> byId = orderRepository.findById(id);
         if(!byId.isPresent())
-            return new ResponseEntity<Orders>(byId.get(),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<Orders>(HttpStatus.BAD_REQUEST);
 
         orderRepository.delete(byId.get());
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
@@ -135,31 +138,56 @@ public class OrderService {
             orders.setCustomerId(reqOrder.getCustomerId());
         if(reqOrder.getOrderDate()!=null)
             orders.setOrderDate(reqOrder.getOrderDate());
-        if(reqOrder.getDiscount()!=null)
-            orders.setDiscount(reqOrder.getDiscount());
-        if(reqOrder.getTotalPrice()!=null)
-            orders.setTotalPrice(reqOrder.getTotalPrice());
+
+        //counts is for check on total no of orders per customers
+        //if its <=9 then we have change the customertype and add discount of 10
+        Long customerId = reqOrder.getCustomerId();
+        Long counts = orderRepository.countByCustomerId(customerId);
+        //Gets customer through the customerId in order table
+        Optional<Customer> CustomerbyId = customerRepository.findById(customerId);
+        //customer id check as if customer doesn't exist in  customer table
+        if(!byId.isPresent()){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        Customer customer =CustomerbyId.get();
+        //sets its type if condition is meet
+        if(counts >= 9) {
+            customer.setCustomerType(CustomerType.GOLD);
+        }
+        if(counts >= 19){
+            customer.setCustomerType(CustomerType.PLATINUM);
+        }
+        customerRepository.save(customer);
+        updateDiscountAndTotalPrice(customer,reqOrder);
+
+//        if(reqOrder.getDiscount()!=null)
+//            orders.setDiscount(reqOrder.getDiscount());
+//        if(reqOrder.getTotalPrice()!=null)
+//            orders.setTotalPrice(reqOrder.getTotalPrice());
+
         List<OrderProductMapper> reqOrderProductMapperList = reqOrder.getOrderProductMapperList();
         if(!reqOrderProductMapperList.isEmpty()) {
-            List<OrderProductMapper> orderProductMapperList = orders.getOrderProductMapperList();
+
+            List<OrderProductMapper> orderProductMapperList = reqOrder.getOrderProductMapperList();
+
             for(OrderProductMapper reqOrderProductMapper : reqOrderProductMapperList){
-                orderProductMapperService.updateOrderProductMapper(reqOrderProductMapper
-                    ,reqOrderProductMapper.getOrderProductId());
+                reqOrderProductMapper.setOrders(reqOrder);
+                //orderProductMapperRespository.save(reqOrderProductMapper);
+
             }
+
+            //orderProductMapperService.deleteOrderProductMapperByOrderIdAndNotInOrderProductId()
             orders.setOrderProductMapperList(reqOrderProductMapperList);
         }
-        //update the orderProductMapperList's element in orderProductMapper table
-        for(OrderProductMapper orderProductMapper : orders.getOrderProductMapperList()){
-            orderProductMapperRespository.save(orderProductMapper);
-        }
+
         orderRepository.save(orders);
-        return new ResponseEntity<Orders>(orders,HttpStatus.ACCEPTED);
+        return new ResponseEntity<Orders>(HttpStatus.ACCEPTED);
     }
 
     public ResponseEntity<Orders> getOrderById(Long orderId) {
         Optional<Orders> byId = orderRepository.findById(orderId);
         if(!byId.isPresent())
-            return new ResponseEntity<>(byId.get(),HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(null,HttpStatus.NO_CONTENT);
         return new ResponseEntity<>(byId.get(),HttpStatus.OK);
     }
 }
