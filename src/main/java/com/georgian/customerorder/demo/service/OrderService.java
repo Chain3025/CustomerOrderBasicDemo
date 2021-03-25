@@ -138,9 +138,10 @@ public class OrderService {
                 productRepository.save(product);
                 totalPrice += quantity*orderProductMapper.getProductPrice();
             }
-            order.setTotalPrice(totalPrice);
-            //Long totalValue = order.getProductPrice()*order.getProductQuantity();
             Long discount = (totalPrice*20)/100;
+            order.setTotalPrice(totalPrice-discount);
+            //Long totalValue = order.getProductPrice()*order.getProductQuantity();
+
             order.setDiscount(discount);
         }
 
@@ -214,80 +215,192 @@ public class OrderService {
         }
         customerRepository.save(customer);
         Long totalPrice = 0l;
-        Long quantity = 0l;
+
+        Long reqQuantity=0l;
+        Long alreadyQuantity=0l;
+        Long updatedQuantity=0l;
         if(customer.getCustomerType().equals(CustomerType.REGULAR)){
             orders.setDiscount(0l);
-            for(OrderProductMapper orderProductMapper:reqOrder.getOrderProductMapperList()){
-                Long productId = orderProductMapper.getProductId();
-                Optional<Product> byIdProduct = productRepository.findById(productId);
-                if(!byIdProduct.isPresent()){
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                }
-                Product product =byIdProduct.get();
-                Long totalProductQuantity = product.getTotalProductQuantity();
+            for(OrderProductMapper reqOrderProductMapper:reqOrder.getOrderProductMapperList()){
 
-                quantity =orderProductMapper.getProductQuantity();
-                if(totalProductQuantity<quantity){
-                    System.out.println("requested product quanity is not in stock");
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                }
-                Long residueProductQuantity = totalProductQuantity - quantity;
-                product.setTotalProductQuantity(residueProductQuantity);
-                productRepository.save(product);
-                totalPrice += quantity*orderProductMapper.getProductPrice();
+                Long orderProductId = reqOrderProductMapper.getOrderProductId();
+                Optional<OrderProductMapper> byIdOrderProductMapper = orderProductMapperRespository
+                    .findById(orderProductId);
+                if(byIdOrderProductMapper.isPresent()){
 
+                    OrderProductMapper orderProductMapperFromDB = byIdOrderProductMapper.get();
+                    alreadyQuantity = orderProductMapperFromDB.getProductQuantity();
+
+                    Long productId = reqOrderProductMapper.getProductId();
+                    Optional<Product> byIdProduct = productRepository.findById(productId);
+                    if(!byIdProduct.isPresent()){
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Product product =byIdProduct.get();
+                    Long totalProductQuantity = product.getTotalProductQuantity();
+                    reqQuantity =reqOrderProductMapper.getProductQuantity();
+                    if(reqQuantity > alreadyQuantity){
+                        updatedQuantity = reqQuantity - alreadyQuantity;
+                    }else
+                        updatedQuantity = alreadyQuantity -reqQuantity;
+
+                    if(totalProductQuantity<reqQuantity){
+                        System.out.println("requested product quanity is not in stock");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Long residueProductQuantity = totalProductQuantity - updatedQuantity;
+                    product.setTotalProductQuantity(residueProductQuantity);
+                    productRepository.save(product);
+                    totalPrice += reqQuantity*reqOrderProductMapper.getProductPrice();
+                }else{
+
+                    Long productId = reqOrderProductMapper.getProductId();
+                    Optional<Product> byIdProduct = productRepository.findById(productId);
+                    if(!byIdProduct.isPresent()){
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Product product =byIdProduct.get();
+                    Long totalProductQuantity = product.getTotalProductQuantity();
+                    reqQuantity =reqOrderProductMapper.getProductQuantity();
+                    if(totalProductQuantity < reqQuantity){
+                        System.out.println("requested product quanity is not in stock");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Long residueProductQuantity = totalProductQuantity - reqQuantity;
+                    product.setTotalProductQuantity(residueProductQuantity);
+                    productRepository.save(product);
+                    totalPrice += reqQuantity*reqOrderProductMapper.getProductPrice();
+
+                }
             }
             orders.setTotalPrice(totalPrice);
         }
         if(customer.getCustomerType().equals(CustomerType.GOLD)){
 
-            for(OrderProductMapper orderProductMapper:reqOrder.getOrderProductMapperList()){
-                Long productId = orderProductMapper.getProductId();
-                Optional<Product> byIdProduct = productRepository.findById(productId);
-                if(!byIdProduct.isPresent()){
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            for(OrderProductMapper reqOrderProductMapper:reqOrder.getOrderProductMapperList()){
+
+                Long orderProductId = reqOrderProductMapper.getOrderProductId();
+                Optional<OrderProductMapper> byIdOrderProductMapper = orderProductMapperRespository
+                    .findById(orderProductId);
+                if(byIdOrderProductMapper.isPresent()){
+
+                    OrderProductMapper orderProductMapperFromDB = byIdOrderProductMapper.get();
+                    alreadyQuantity = orderProductMapperFromDB.getProductQuantity();
+
+                    Long productId = reqOrderProductMapper.getProductId();
+                    Optional<Product> byIdProduct = productRepository.findById(productId);
+                    if(!byIdProduct.isPresent()){
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Product product =byIdProduct.get();
+                    Long totalProductQuantity = product.getTotalProductQuantity();
+                    reqQuantity =reqOrderProductMapper.getProductQuantity();
+                    if(reqQuantity > alreadyQuantity){
+                        updatedQuantity = reqQuantity - alreadyQuantity;
+                    }else
+                        updatedQuantity = alreadyQuantity -reqQuantity;
+
+                    if(totalProductQuantity<reqQuantity){
+                        System.out.println("requested product quanity is not in stock");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Long residueProductQuantity = totalProductQuantity - updatedQuantity;
+                    product.setTotalProductQuantity(residueProductQuantity);
+                    productRepository.save(product);
+                    totalPrice += reqQuantity*reqOrderProductMapper.getProductPrice();
+                }else{
+
+                    Long productId = reqOrderProductMapper.getProductId();
+                    Optional<Product> byIdProduct = productRepository.findById(productId);
+                    if(!byIdProduct.isPresent()){
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Product product =byIdProduct.get();
+                    Long totalProductQuantity = product.getTotalProductQuantity();
+                    reqQuantity =reqOrderProductMapper.getProductQuantity();
+                    if(totalProductQuantity < reqQuantity){
+                        System.out.println("requested product quanity is not in stock");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Long residueProductQuantity = totalProductQuantity - reqQuantity;
+                    product.setTotalProductQuantity(residueProductQuantity);
+                    productRepository.save(product);
+                    totalPrice += reqQuantity*reqOrderProductMapper.getProductPrice();
+
+
+
                 }
-                Product product =byIdProduct.get();
-                Long totalProductQuantity = product.getTotalProductQuantity();
-                quantity =orderProductMapper.getProductQuantity();
-                if(totalProductQuantity<quantity){
-                    System.out.println("requested product quanity is not in stock");
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                }
-                Long residueProductQuantity = totalProductQuantity - quantity;
-                product.setTotalProductQuantity(residueProductQuantity);
-                productRepository.save(product);
-                totalPrice += quantity*orderProductMapper.getProductPrice();
+
+
+
             }
-            orders.setTotalPrice(totalPrice);
-            //Long totalValue = order.getProductPrice()*order.getProductQuantity();
             Long discount = (totalPrice*10)/100;
+            orders.setTotalPrice(totalPrice-discount);
+            //Long totalValue = order.getProductPrice()*order.getProductQuantity();
+
             orders.setDiscount(discount);
         }
         if(customer.getCustomerType().equals(CustomerType.PLATINUM)){
 
-            for(OrderProductMapper orderProductMapper:reqOrder.getOrderProductMapperList()){
+            for(OrderProductMapper reqOrderProductMapper:reqOrder.getOrderProductMapperList()){
 
-                Long productId = orderProductMapper.getProductId();
-                Optional<Product> byIdProduct = productRepository.findById(productId);
-                if(!byIdProduct.isPresent()){
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                Long orderProductId = reqOrderProductMapper.getOrderProductId();
+                Optional<OrderProductMapper> byIdOrderProductMapper = orderProductMapperRespository
+                    .findById(orderProductId);
+                if(byIdOrderProductMapper.isPresent()){
+
+                    OrderProductMapper orderProductMapperFromDB = byIdOrderProductMapper.get();
+                    alreadyQuantity = orderProductMapperFromDB.getProductQuantity();
+
+                    Long productId = reqOrderProductMapper.getProductId();
+                    Optional<Product> byIdProduct = productRepository.findById(productId);
+                    if(!byIdProduct.isPresent()){
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Product product =byIdProduct.get();
+                    Long totalProductQuantity = product.getTotalProductQuantity();
+                    reqQuantity =reqOrderProductMapper.getProductQuantity();
+                    if(reqQuantity > alreadyQuantity){
+                        updatedQuantity = reqQuantity - alreadyQuantity;
+                    }else
+                        updatedQuantity = alreadyQuantity -reqQuantity;
+
+                    if(totalProductQuantity<reqQuantity){
+                        System.out.println("requested product quanity is not in stock");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Long residueProductQuantity = totalProductQuantity - updatedQuantity;
+                    product.setTotalProductQuantity(residueProductQuantity);
+                    productRepository.save(product);
+                    totalPrice += reqQuantity*reqOrderProductMapper.getProductPrice();
+                }else{
+
+                    Long productId = reqOrderProductMapper.getProductId();
+                    Optional<Product> byIdProduct = productRepository.findById(productId);
+                    if(!byIdProduct.isPresent()){
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Product product =byIdProduct.get();
+                    Long totalProductQuantity = product.getTotalProductQuantity();
+                    reqQuantity =reqOrderProductMapper.getProductQuantity();
+                    if(totalProductQuantity < reqQuantity){
+                        System.out.println("requested product quanity is not in stock");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    Long residueProductQuantity = totalProductQuantity - reqQuantity;
+                    product.setTotalProductQuantity(residueProductQuantity);
+                    productRepository.save(product);
+                    totalPrice += reqQuantity*reqOrderProductMapper.getProductPrice();
+
+
+
                 }
-                Product product =byIdProduct.get();
-                Long totalProductQuantity = product.getTotalProductQuantity();
-                quantity =orderProductMapper.getProductQuantity();
-                if(totalProductQuantity<quantity){
-                    System.out.println("requested product quanity is not in stock");
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                }
-                Long residueProductQuantity = totalProductQuantity - quantity;
-                product.setTotalProductQuantity(residueProductQuantity);
-                productRepository.save(product);
-                totalPrice += quantity*orderProductMapper.getProductPrice();
+
+
+
             }
-            orders.setTotalPrice(totalPrice);
-            //Long totalValue = order.getProductPrice()*order.getProductQuantity();
             Long discount = (totalPrice*20)/100;
+            orders.setTotalPrice(totalPrice-discount);
             orders.setDiscount(discount);
         }
 
@@ -302,7 +415,7 @@ public class OrderService {
 
             }
 
-            //orderProductMapperService.deleteOrderProductMapperByOrderIdAndNotInOrderProductId()
+
             orders.setOrderProductMapperList(reqOrderProductMapperList);
         }
 
