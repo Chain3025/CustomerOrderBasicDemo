@@ -23,6 +23,10 @@ public class Product {
       private Long productId;
       private String productName;
       private Long productPrice;
+<<<<<<< HEAD
 
 
+=======
+      private Long totalProductQuantity;
+>>>>>>> feature-inventory
 }
