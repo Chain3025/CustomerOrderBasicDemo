@@ -26,6 +26,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+
     private final OrderProductMapperService orderProductMapperService;
     private final OrderProductMapperRespository orderProductMapperRespository;
 
@@ -70,6 +71,7 @@ public class OrderService {
         customerRepository.save(customer);
         updateDiscountAndTotalPrice(customer,order);
         List<OrderProductMapper> addOrderProductMapperList = order.getOrderProductMapperList();
+        order.setProductCount((long) order.getOrderProductMapperList().size());
         for(OrderProductMapper orderProductMapper: addOrderProductMapperList){
             orderProductMapper.setOrders(order);
 //            orderProductMapperRespository.save(orderProductMapper);
@@ -130,6 +132,7 @@ public class OrderService {
     }
 
     public ResponseEntity<Orders> updateOrder(Orders reqOrder, Long id) {
+
         Optional<Orders> byId = orderRepository.findById(id);
         if(!byId.isPresent()){
             return new ResponseEntity<Orders>((Orders) null,HttpStatus.BAD_REQUEST);
@@ -191,16 +194,28 @@ public class OrderService {
 
 
         List<OrderProductMapper> reqOrderProductMapperList = reqOrder.getOrderProductMapperList();
+        orders.setProductCount((long) reqOrder.getOrderProductMapperList().size());
         if(!reqOrderProductMapperList.isEmpty()) {
 
             for(OrderProductMapper reqOrderProductMapper : reqOrderProductMapperList){
                 reqOrderProductMapper.setOrders(reqOrder);
 
             }
+
+            //orderProductMapperRespository.deleteByOrderIdAndOrderProductId(orderId,);
+            /*
+            delete from order-product-mapper where order_id =:? and order_product_id not in();
+            Select order_product_id from order_product_mapper
+
+             */
             orders.setOrderProductMapperList(reqOrderProductMapperList);
         }
 
         orderRepository.save(orders);
+        //testing for delete of those order_product_id which are not include in the put request of order
+        //Long orderIdForDelete = orders.getOrderId();
+        //OrderProductMapper orderProductMapper = orders.getOrderProductMapperList().get(1);
+        //orderProductMapperRespository.deleteByOrderIdAndListOfOrderProductId(orderIdForDelete,orderProductMapper);
         return new ResponseEntity<Orders>(HttpStatus.OK);
     }
 

@@ -36,8 +36,9 @@ public class Orders {
     private Long customerId;
     private Long totalPrice;
     private Long discount;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "orders", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "orders", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<OrderProductMapper> orderProductMapperList;
+    private Long productCount;
 
 
 
